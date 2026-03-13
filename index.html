@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>PharmFlow v4 — 병원 약제부 처방 관리 시스템</title>
+<meta name="description" content="PharmFlow v4: AI 우선순위 기반 대형병원 약제 프로세스 관리 시스템">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg0:#0f1923;--bg1:#162231;--bg2:#1c2d3f;--bg3:#243a50;--bg4:#1a2b3d;
+--ur:#ff4757;--yl:#ff9f43;--gn:#27d98c;--bl:#4a9eff;--pr:#a55eea;--cy:#2bcbba;
+--t1:#e8edf3;--t2:#8a97a8;--t3:#5d6b7e;--gry:#8892a4;
+--brd:rgba(255,255,255,.06);--brd2:rgba(255,255,255,.1);
+--font:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;--tr:.25s ease;
+}
+body{font-family:var(--font);background:var(--bg0);color:var(--t1);min-height:100vh}
+body.night{--bg0:#060c12;--bg1:#0b1420;--bg2:#101e2c;--bg3:#182c3f;--bg4:#0e1a28;font-size:105%}
+body.night .rx.night-stat{border-color:var(--ur)!important;box-shadow:0 0 16px rgba(255,71,87,.35)!important;transform:scale(1.01)}
+mark{background:#ffd43b44;color:var(--t1);border-radius:2px;padding:0 1px}
+/* HEADER */
+.hdr{background:linear-gradient(135deg,var(--bg1),#1a3048);border-bottom:1px solid var(--brd2);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-i{width:32px;height:32px;background:linear-gradient(135deg,var(--bl),#6b5ce7);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 8px rgba(74,158,255,.3)}
+.logo-t{font-size:18px;font-weight:700;background:linear-gradient(135deg,#fff,#a0b4cc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-s{font-size:9px;color:var(--t3);letter-spacing:1px;text-transform:uppercase}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.clock{font-size:12px;color:var(--t2)}.clock b{font-size:15px;color:var(--t1)}
+.tabs{display:flex;gap:2px;background:rgba(0,0,0,.3);border-radius:7px;padding:2px}
+.tab{padding:6px 14px;border:none;border-radius:5px;background:0;color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;transition:var(--tr);font-family:var(--font)}
+.tab:hover{color:var(--t1);background:rgba(255,255,255,.05)}.tab.on{background:var(--bl);color:#fff;box-shadow:0 2px 8px rgba(74,158,255,.3)}
+.h-btn{padding:4px 10px;border:1px solid var(--brd2);border-radius:5px;background:var(--bg2);color:var(--t2);font-size:10px;font-weight:600;cursor:pointer;font-family:var(--font);transition:var(--tr)}.h-btn:hover{background:var(--bg3)}
+.h-sel{padding:4px 8px;background:var(--bg2);color:var(--t1);border:1px solid var(--brd2);border-radius:5px;font-size:10px;font-family:var(--font);outline:none}
+/* PIPELINE */
+.pipe{display:flex;align-items:center;justify-content:center;gap:0;padding:8px 24px;background:var(--bg1);border-bottom:1px solid var(--brd)}
+.pp-s{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 12px;border-radius:6px;min-width:68px;cursor:pointer;transition:var(--tr)}
+.pp-s:hover{background:rgba(74,158,255,.1)}.pp-s .pp-n{font-size:15px;font-weight:700}.pp-s .pp-l{font-size:9px;color:var(--t3)}
+.pp-s.hi{background:rgba(74,158,255,.1)}.pp-s.active{background:rgba(74,158,255,.2);outline:1px solid var(--bl)}.pp-a{color:var(--t3);font-size:10px;margin:0 1px}
+/* ALERT BANNER */
+.alert-ban{display:flex;align-items:center;padding:6px 24px;border-bottom:1px solid var(--brd);font-size:11px;height:34px;overflow:hidden;gap:16px}
+.alert-ban.danger{background:linear-gradient(90deg,rgba(255,50,50,.1),rgba(255,107,74,.06));border-bottom-color:rgba(255,71,87,.25)}
+.alert-ban.safe{background:rgba(39,217,140,.06);border-bottom-color:rgba(39,217,140,.2)}
+.al-item{font-weight:600;white-space:nowrap}.al-d{color:var(--ur)}.al-w{color:var(--yl)}
+.al-more{margin-left:auto;background:rgba(255,255,255,.08);border:1px solid var(--brd2);color:var(--t2);padding:2px 10px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--font)}.al-more:hover{background:rgba(255,255,255,.12)}.al-safe{color:var(--gn);font-weight:600}
+/* STATS */
+.stats{display:flex;gap:8px;padding:8px 24px;background:var(--bg1);border-bottom:1px solid var(--brd);flex-wrap:wrap}
+.st{display:flex;align-items:center;gap:6px;background:var(--bg2);padding:6px 12px;border-radius:6px;border:1px solid var(--brd);font-size:12px}
+.st b{font-size:16px;font-weight:700}.st .st-l{font-size:10px;color:var(--t3)}.st .st-i{font-size:13px}
+/* VIEWS */
+.view{display:none;padding:16px 24px}.view.on{display:block}
+/* Pharmacist Layout */
+.pharm-layout{display:flex;gap:16px}.pharm-main{flex:1;min-width:0}.pharm-side{width:230px;flex-shrink:0}
+.q-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px}
+.q-tt{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.q-ct{font-size:11px;color:var(--t2);background:rgba(255,255,255,.08);padding:2px 10px;border-radius:12px}
+/* Search + Filter */
+.q-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.search-wrap{display:flex;align-items:center;background:var(--bg2);border:1px solid var(--brd2);border-radius:5px;padding:0 8px;flex:1;max-width:260px}
+.search-wrap input{background:0;border:0;color:var(--t1);font-size:11px;padding:6px 4px;outline:none;width:100%;font-family:var(--font)}
+.search-x{background:0;border:0;color:var(--t3);cursor:pointer;font-size:12px;font-family:var(--font);padding:2px 4px}.search-x:hover{color:var(--t1)}
+.tf-btn{padding:4px 10px;border:1px solid var(--brd2);border-radius:5px;background:var(--bg2);color:var(--t2);font-size:9px;font-weight:600;cursor:pointer;font-family:var(--font);transition:var(--tr)}.tf-btn:hover{background:var(--bg3)}.tf-btn.on{background:var(--bl)22;border-color:var(--bl);color:var(--bl)}
+.q-list{display:flex;flex-direction:column;gap:14px;min-height:200px}
+.q-empty{display:flex;align-items:center;justify-content:center;height:80px;color:var(--t3);font-size:12px;font-style:italic}
+/* Pagination */
+.pager{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;padding:8px}
+.pg-btn{padding:6px 16px;border:1px solid var(--brd2);border-radius:6px;background:var(--bg2);color:var(--t1);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);transition:var(--tr)}
+.pg-btn:hover:not(:disabled){background:var(--bg3);border-color:var(--bl)}.pg-btn:disabled{opacity:.3;cursor:not-allowed}
+.pg-info{font-size:11px;color:var(--t2)}
+/* RX Card */
+.rx{display:flex;gap:0;background:var(--bg2);border-radius:10px;border:1px solid var(--brd);transition:var(--tr);overflow:hidden;min-height:88px;cursor:pointer}
+.rx:hover{background:var(--bg3);border-color:var(--brd2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.rx-rank{width:52px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-right:1px solid var(--brd)}
+.rank-n{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff}
+.rank-n.r1{background:linear-gradient(135deg,#ff4757,#ff6b81)}.rank-n.r2{background:linear-gradient(135deg,#ff9f43,#ffbe76)}.rank-n.r3{background:rgba(136,146,164,.3);color:var(--t2)}
+.rx-body{flex:1;padding:10px 14px;min-width:0}
+.rx-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:3px}
+.rx-pt{display:flex;align-items:center;gap:8px}
+.av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.pt-nm{font-size:13px;font-weight:700}.pt-wd{font-size:10px;color:var(--t2)}
+.badges{display:flex;gap:3px;flex-wrap:wrap;align-items:center}
+.bdg{font-size:9px;font-weight:700;padding:1px 7px;border-radius:10px;letter-spacing:.2px;white-space:nowrap}
+.bdg.ha{background:rgba(255,71,87,.15);color:var(--ur);border:1px solid rgba(255,71,87,.3)}
+.lock-bdg{font-size:9px;font-weight:700;padding:1px 7px;border-radius:10px;background:rgba(255,159,67,.15);color:var(--yl);border:1px solid rgba(255,159,67,.3)}
+.rx-drug{font-size:15px;font-weight:700;margin:3px 0 2px 38px;color:var(--t1)}
+.rx-drug-detail{font-size:11px;color:var(--t2);margin-left:38px;margin-bottom:4px}
+.rx-bot{display:flex;align-items:center;justify-content:space-between;margin-left:38px;flex-wrap:wrap;gap:4px}
+.rx-meta{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--t3)}.rx-eta{color:var(--ur);font-weight:600}.rx-vo{color:var(--yl);font-weight:600;font-size:10px}
+.rx-act{display:flex;align-items:center;gap:4px}
+.s-bdg{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;display:inline-flex;align-items:center;gap:3px}
+.s-bdg.s0,.s-bdg.s1{background:rgba(136,146,164,.12);color:var(--gry)}.s-bdg.s2{background:rgba(74,158,255,.12);color:var(--bl)}.s-bdg.s3{background:rgba(255,159,67,.12);color:var(--yl)}.s-bdg.s4{background:rgba(39,217,140,.12);color:var(--gn)}.s-bdg.s5{background:rgba(74,158,255,.15);color:var(--bl)}.s-bdg.s6{background:rgba(39,217,140,.15);color:var(--gn)}.s-bdg.s7{background:rgba(39,217,140,.25);color:#1afa8a}
+.btn{padding:5px 12px;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;transition:var(--tr);font-family:var(--font);display:inline-flex;align-items:center;gap:4px}
+.btn.b-blue{background:linear-gradient(135deg,var(--bl),#5b8edd);color:#fff;box-shadow:0 1px 4px rgba(74,158,255,.2)}
+.btn.b-green{background:linear-gradient(135deg,var(--gn),#2ab77a);color:#fff}
+.btn.b-orange{background:linear-gradient(135deg,var(--yl),#e8a435);color:#1a1a1a}
+.btn.b-rej{background:rgba(255,71,87,.1);color:var(--ur);border:1px solid rgba(255,71,87,.25);padding:4px 6px;font-size:10px}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.1)}.btn:disabled{background:var(--bg4);color:var(--t3);cursor:not-allowed;transform:none;filter:none}
+.blink-red{animation:blR 1s infinite}@keyframes blR{50%{box-shadow:0 0 12px rgba(255,71,87,.4)}}
+.blink-orange{animation:blO 1.5s infinite}@keyframes blO{50%{box-shadow:0 0 10px rgba(255,159,67,.3)}}
+/* SIDE PANEL */
+.side-box{background:var(--bg1);border-radius:10px;border:1px solid var(--brd);margin-bottom:10px;overflow:hidden}
+.side-hd{padding:8px 12px;font-size:11px;font-weight:700;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:5px}
+.side-bd{padding:6px 8px}
+.sa-item{font-size:10px;padding:3px 6px;border-radius:4px;margin-bottom:2px}.sa-d{background:rgba(255,71,87,.08);color:var(--ur)}.sa-w{background:rgba(255,159,67,.08);color:var(--yl)}
+.sp-item{display:flex;align-items:center;justify-content:space-between;padding:3px 0;font-size:11px;color:var(--t2)}.sp-item b{color:var(--t1)}
+/* Completed */
+.comp{background:var(--bg1);border-radius:10px;border:1px solid var(--brd);overflow:hidden;margin-top:12px}
+.comp-hd{padding:8px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--brd);font-size:12px;font-weight:700;cursor:pointer}
+.comp-hd:hover{background:rgba(255,255,255,.02)}.comp-bd{padding:8px;display:flex;flex-wrap:wrap;gap:6px;max-height:150px;overflow-y:auto}.comp-bd.collapsed{display:none}
+.cmp-c{background:var(--bg2);border-radius:5px;border:1px solid var(--brd);padding:6px 10px;display:flex;align-items:center;gap:8px;flex:0 0 calc(50% - 3px);min-width:200px}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.on{display:flex}.modal{background:var(--bg1);border:1px solid var(--brd2);border-radius:14px;padding:24px;width:520px;max-width:92%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:modalIn .25s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.modal h2{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.modal-section{margin-bottom:14px}.modal-section h3{font-size:12px;font-weight:700;color:var(--t2);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.modal-row{font-size:12px;color:var(--t1);padding:3px 0;display:flex;justify-content:space-between}.modal-row .label{color:var(--t3)}
+.modal-reason{font-size:11px;color:var(--t2);background:var(--bg2);border-radius:6px;padding:8px 10px;line-height:1.6;margin-top:4px;border-left:3px solid var(--bl)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--brd)}
+.modal-btn{padding:8px 20px;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:var(--tr)}
+.modal-btn.cancel{background:var(--bg2);color:var(--t2);border:1px solid var(--brd2)}.modal-btn.cancel:hover{background:var(--bg3)}
+.modal-btn.primary{background:linear-gradient(135deg,var(--bl),#5b8edd);color:#fff}.modal-btn.success{background:linear-gradient(135deg,var(--gn),#2ab77a);color:#fff}
+.modal-btn:disabled{opacity:.4;cursor:not-allowed}
+/* Five Rights */
+.fr-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg2);border-radius:6px;margin-bottom:4px;cursor:pointer;transition:var(--tr)}
+.fr-item:hover{background:var(--bg3)}.fr-cb{width:18px;height:18px;accent-color:var(--gn);cursor:pointer}.fr-l{font-size:12px;font-weight:600;flex:1}.fr-v{font-size:11px;color:var(--t2)}
+/* DOCTOR VIEW */
+.doc-form{max-width:640px;margin:0 auto;background:var(--bg1);border-radius:12px;border:1px solid var(--brd);padding:20px}
+.doc-form h2{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.fg{display:flex;flex-direction:column;gap:3px;margin-bottom:10px}
+.fg label{font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+.fi,.fs{padding:8px 10px;background:var(--bg2);color:var(--t1);border:1px solid var(--brd2);border-radius:5px;font-size:12px;font-family:var(--font);outline:none;transition:var(--tr);width:100%}
+.fi:focus,.fs:focus{border-color:var(--bl);box-shadow:0 0 0 2px rgba(74,158,255,.1)}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.type-sel{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.type-btn{padding:6px 12px;border:2px solid var(--brd2);border-radius:6px;background:var(--bg2);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);transition:var(--tr)}.type-btn:hover{background:var(--bg3)}.type-btn.on{color:#fff;border-width:2px}
+.doc-warn{display:none;padding:8px 12px;border-radius:6px;font-size:11px;font-weight:600;margin-bottom:10px;align-items:center;gap:6px}
+.doc-warn.show{display:flex}
+.doc-warn.red{background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.3);color:var(--ur)}
+.doc-warn.orange{background:rgba(255,159,67,.1);border:1px solid rgba(255,159,67,.3);color:var(--yl)}
+.doc-warn.cyan{background:rgba(43,203,186,.1);border:1px solid rgba(43,203,186,.3);color:var(--cy)}
+.ac-wrap{position:relative}.ac-list{position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--brd2);border-radius:0 0 6px 6px;max-height:180px;overflow-y:auto;z-index:50;display:none}
+.ac-list.on{display:block}.ac-item{padding:6px 10px;font-size:11px;cursor:pointer;transition:var(--tr)}.ac-item:hover{background:var(--bg3)}.ac-item .ac-sub{font-size:9px;color:var(--t3)}
+.doc-submit{width:100%;padding:14px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);background:linear-gradient(135deg,var(--bl),#6b5ce7);color:#fff;box-shadow:0 3px 12px rgba(74,158,255,.3);margin-top:8px;transition:var(--tr)}
+.doc-submit:hover{box-shadow:0 4px 20px rgba(74,158,255,.5)}.doc-submit:disabled{opacity:.5;cursor:not-allowed}
+.doc-log{margin-top:14px;max-width:640px;margin-left:auto;margin-right:auto}
+.doc-log h3{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px}
+.dl-e{background:var(--bg2);border-radius:5px;padding:6px 10px;margin-bottom:4px;font-size:10px;color:var(--t2);border-left:3px solid var(--gn);animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+/* NURSE VIEW */
+.n-header{background:var(--bg1);border-radius:10px;border:1px solid var(--brd);padding:10px 14px;margin-bottom:12px}
+.n-hd-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.n-hd-row .lb{font-size:11px;font-weight:600;color:var(--t2)}
+.n-hd-stats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.ns-i{font-size:10px;font-weight:600;color:var(--t2);background:var(--bg2);padding:3px 10px;border-radius:5px;border:1px solid var(--brd)}
+.n-hd-filters{display:flex;gap:4px;flex-wrap:wrap}
+.nf-btn{padding:4px 10px;border:1px solid var(--brd2);border-radius:5px;background:var(--bg2);color:var(--t2);font-size:9px;font-weight:600;cursor:pointer;font-family:var(--font);transition:var(--tr)}.nf-btn:hover{background:var(--bg3)}.nf-btn.on{background:var(--bl)22;border-color:var(--bl);color:var(--bl)}
+.nurse-layout{display:flex;gap:14px}.nurse-main{flex:1;min-width:0}.nurse-side{width:220px;flex-shrink:0}
+.ns-mini{display:flex;align-items:center;gap:6px;padding:4px 2px;border-bottom:1px solid var(--brd)}
+.n-sel{padding:6px 12px;background:var(--bg2);color:var(--t1);border:1px solid var(--brd2);border-radius:5px;font-size:12px;font-family:var(--font);outline:none;min-width:100px}
+.n-list{display:flex;flex-direction:column;gap:10px}
+.nc{display:flex;background:var(--bg1);border-radius:10px;border:1px solid var(--brd);overflow:hidden;transition:var(--tr)}
+.nc:hover{border-color:var(--brd2);box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.nc-arrived{border-color:rgba(39,217,140,.3);background:linear-gradient(135deg,var(--bg1),rgba(39,217,140,.04))}
+.nc-stat-night{border-color:var(--ur)!important;box-shadow:0 0 12px rgba(255,71,87,.2)!important}
+.nc-bar{width:5px;flex-shrink:0;border-radius:10px 0 0 10px}
+.nc-body{flex:1;padding:12px 14px;min-width:0}
+.nc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px}
+.nc-pt{display:flex;align-items:flex-start;gap:10px}
+.nc-nm{font-size:13px;font-weight:700}.nc-drug{font-size:12px;font-weight:600;color:var(--t1);margin-top:2px}.nc-diag{font-size:10px;color:var(--t3);margin-top:1px}
+.nc-badges{display:flex;gap:3px;flex-wrap:wrap;align-items:flex-start;flex-shrink:0}
+.nc-sep{height:1px;background:var(--brd);margin:6px 0}
+.nc-status{font-size:11px;color:var(--t2);line-height:1.6}
+.nc-prog-wrap{padding:2px 0}
+.nc-prog-labels{display:flex;gap:0;margin-top:2px;justify-content:space-between}
+.pl{font-size:7px;color:var(--t3);text-align:center;flex:1}.pl-cur{color:var(--bl);font-weight:700}.pl-done{color:var(--gn)}
+.nc-actions{display:flex;justify-content:flex-end}
+.btn.b-sm{padding:3px 8px;font-size:9px}.btn.b-vo{background:rgba(255,159,67,.15);color:var(--yl);border:1px solid rgba(255,159,67,.3)}
+.btn.b-lg{padding:8px 20px;font-size:12px}
+.n-prog{display:flex;align-items:center;gap:2px}
+.n-prog .dot{width:6px;height:6px;border-radius:50%;background:var(--bg4);border:1.5px solid var(--t3)}.n-prog .dot.done{background:var(--gn);border-color:var(--gn)}.n-prog .dot.cur{background:var(--bl);border-color:var(--bl);box-shadow:0 0 4px rgba(74,158,255,.4)}
+.n-prog .ln{width:10px;height:1.5px;background:var(--t3);opacity:.3}.n-prog .ln.done{background:var(--gn);opacity:1}.n-prog .ln.cur{background:var(--bl);opacity:1}
+/* ADMIN */
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.admin-box{background:var(--bg1);border-radius:10px;border:1px solid var(--brd);overflow:hidden}
+.admin-hd{padding:10px 14px;font-size:12px;font-weight:700;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:6px}
+.admin-bd{padding:14px}
+.donut{width:140px;height:140px;border-radius:50%;position:relative;margin:0 auto 10px}
+.donut-hole{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:80px;height:80px;border-radius:50%;background:var(--bg1);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-hole b{font-size:22px;font-weight:800;line-height:1}.donut-hole span{font-size:9px;color:var(--t3)}
+.donut-leg{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}.dl-i{font-size:10px;color:var(--t2);display:flex;align-items:center;gap:4px}.dl-c{width:8px;height:8px;border-radius:2px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}.bar-l{font-size:10px;color:var(--t2);min-width:60px;text-align:right}
+.bar-track{flex:1;height:16px;background:var(--bg2);border-radius:4px;overflow:hidden}.bar-fill{height:100%;border-radius:4px;transition:.5s ease}.bar-v{font-size:10px;font-weight:700;min-width:36px}
+.ps-item{display:flex;align-items:center;gap:10px;margin-bottom:8px}.ps-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.ah-item{font-size:10px;padding:4px 8px;border-radius:4px;margin-bottom:3px}.ah-d{background:rgba(255,71,87,.08);color:var(--ur)}.ah-w{background:rgba(255,159,67,.08);color:var(--yl)}
+.analysis{font-size:10px;color:var(--t3);background:var(--bg2);border-radius:6px;padding:8px 10px;margin-top:10px;line-height:1.6;border-left:3px solid var(--bl)}
+.audit-item{display:flex;align-items:center;gap:10px;font-size:10px;padding:4px 6px;border-bottom:1px solid var(--brd);color:var(--t2)}.audit-time{font-weight:600;color:var(--bl);min-width:42px}.audit-who{font-weight:600;color:var(--t1);min-width:60px}
+.admin-emr{display:flex;gap:8px;margin-bottom:14px}.admin-emr button{padding:6px 14px;border:1px solid var(--brd2);border-radius:6px;background:var(--bg2);color:var(--t1);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);transition:var(--tr)}.admin-emr button:hover{background:var(--bg3);border-color:var(--bl)}
+/* TOAST */
+.toast{position:fixed;bottom:28px;right:28px;padding:8px 18px;border-radius:7px;font-size:11px;font-weight:600;z-index:300;transform:translateX(120%);transition:transform .4s cubic-bezier(.4,0,.2,1);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.toast.show{transform:translateX(0)}.toast.ok{background:linear-gradient(135deg,var(--gn),#2ab77a);color:#fff}.toast.info{background:linear-gradient(135deg,var(--bl),#5b8edd);color:#fff}.toast.warn{background:linear-gradient(135deg,var(--yl),#e8a435);color:#1a1a1a}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div class="logo"><div class="logo-i">💊</div><div><div class="logo-t">PharmFlow</div><div class="logo-s">AI Priority System v4</div></div></div>
+  <div class="hdr-r">
+    <select class="h-sel" id="pharmSel" onchange="onPharmSelect()" title="약사 선택"></select>
+    <button class="h-btn" id="nightBtn" onclick="toggleNight()">🌙 야간</button>
+    <div class="tabs"><button class="tab on" onclick="switchTab(0)">🩺 의사 OCS</button><button class="tab" onclick="switchTab(1)">💊 약사</button><button class="tab" onclick="switchTab(2)">🏥 간호사</button><button class="tab" onclick="switchTab(3)">📊 관리자</button></div>
+    <div class="clock"><span id="cDate"></span> <b id="cTime"></b></div>
+  </div>
+</header>
+<div class="pipe" id="pipeline"></div>
+<div class="alert-ban" id="alertBan"></div>
+<div class="stats" id="statsBar"></div>
+
+<!-- 의사 뷰 -->
+<div class="view on" id="v0">
+  <div class="doc-form">
+    <h2>🩺 OCS 처방 입력</h2>
+    <div class="f-row"><div class="fg"><label>환자명 *</label><input class="fi" id="dPt" placeholder="환자 이름"></div>
+    <div class="fg"><label>병동 *</label><select class="fs" id="dWd" onchange="onWardChange()"></select></div></div>
+    <div class="f-row"><div class="fg"><label>호수 *</label><select class="fs" id="dRm"></select></div>
+    <div class="fg"><label>진단명</label><div class="ac-wrap"><input class="fi" id="dDiag" placeholder="검색..." autocomplete="off" oninput="acFilter('dDiag','diagAC',DIAG_LIST)"><div class="ac-list" id="diagAC"></div></div></div></div>
+    <div class="fg"><label>처방유형 *</label><div class="type-sel" id="typeSel"></div></div>
+    <div id="docWarnStat" class="doc-warn red">⚡ STAT 응급처방 — 목표 처리시간 30분 이내</div>
+    <div id="docWarnVerbal" class="doc-warn orange">📞 구두오더 — 24시간 내 서면 확인 의무</div>
+    <div id="docWarnPreop" class="doc-warn cyan">🏥 수술 전 처방 — 수술 예정 시간을 입력해주세요</div>
+    <div class="fg" id="surgTimeRow" style="display:none"><label>수술 예정 시간</label><input class="fi" type="time" id="dSurgTime"></div>
+    <div class="fg"><label>약품명 *</label><div class="ac-wrap"><input class="fi" id="dMed" placeholder="약품 검색..." autocomplete="off" oninput="acFilter('dMed','medAC',MED_LIST);updatePrepDisplay()"><div class="ac-list" id="medAC"></div></div></div>
+    <div class="f-row"><div class="fg"><label>투여경로 *</label><select class="fs" id="dRt" onchange="updatePrepDisplay()"><option value="PO">PO (경구)</option><option value="IV">IV (정맥)</option><option value="IM">IM (근육)</option><option value="SC">SC (피하)</option></select></div>
+    <div class="fg"><label>조제방식 (자동)</label><div class="fi" id="dPrep" style="background:var(--bg4);cursor:default">🤖 ATC조제</div></div></div>
+    <button class="doc-submit" id="docSubmitBtn" onclick="submitDoc()">📤 약제부로 처방 전송</button>
+  </div>
+  <div class="doc-log" id="docLog"><h3>📋 최근 처방 전송 내역</h3></div>
+</div>
+<!-- 약사 뷰 -->
+<div class="view" id="v1">
+  <div class="pharm-layout">
+    <div class="pharm-main">
+      <div class="q-hd"><div class="q-tt">🧠 AI 우선순위 큐</div><div class="q-ct" id="pharmQCt">0건</div></div>
+      <div class="q-toolbar">
+        <div class="search-wrap"><span style="color:var(--t3);font-size:12px">🔍</span><input id="searchInput" placeholder="환자명 / 약물명 검색" oninput="onSearch()"><button class="search-x" onclick="clearSearch()">✕</button></div>
+        <button class="tf-btn on" data-f="ALL" onclick="setTypeFilter('ALL')">전체</button>
+        <button class="tf-btn" data-f="STAT" onclick="setTypeFilter('STAT')">STAT</button>
+        <button class="tf-btn" data-f="VERBAL" onclick="setTypeFilter('VERBAL')">구두오더</button>
+        <button class="tf-btn" data-f="DISCHARGE" onclick="setTypeFilter('DISCHARGE')">퇴원</button>
+        <button class="tf-btn" data-f="HIGH_ALERT" onclick="setTypeFilter('HIGH_ALERT')">⚠ 고위험</button>
+      </div>
+      <div class="q-list" id="pharmQueue"></div>
+      <div class="pager" id="pager"></div>
+      <div class="comp"><div class="comp-hd" onclick="toggleComp()"><span>✅ 오늘 조제 완료</span><span class="q-ct" id="pharmCompCt">0건</span></div><div class="comp-bd" id="pharmComp"></div></div>
+    </div>
+    <div class="pharm-side">
+      <div class="side-box"><div class="side-hd">🚨 실시간 경고</div><div class="side-bd" id="sideAlerts"></div></div>
+      <div class="side-box"><div class="side-hd">⚗️ 조제방식</div><div class="side-bd" id="sidePrep"></div></div>
+      <div class="side-box"><div class="side-hd">👨‍⚕️ 약사별 처리</div><div class="side-bd" id="sidePharm"></div></div>
+      <div class="side-box"><div class="side-hd">🎯 우선순위 분포</div><div class="side-bd" id="sidePri"></div></div>
+    </div>
+  </div>
+</div>
+<!-- 간호사 뷰 -->
+<div class="view" id="v2">
+  <div class="n-header">
+    <div class="n-hd-row">
+      <span class="lb">🏥 병동</span><select class="n-sel" id="wSel" onchange="renderNurse()"></select>
+      <span class="lb" style="margin-left:12px">👩‍⚕️ 간호사</span><select class="n-sel" id="nurseSel" onchange="onNurseSelect()"></select>
+      <span style="margin-left:auto;font-size:10px;color:var(--t3)" id="nInfo"></span>
+    </div>
+    <div class="n-hd-stats" id="nStatsBar"></div>
+    <div class="n-hd-filters">
+      <button class="nf-btn on" data-f="ALL" onclick="setNurseFilter('ALL')">전체</button>
+      <button class="nf-btn" data-f="PICKUP" onclick="setNurseFilter('PICKUP')">📦 즉시수령</button>
+      <button class="nf-btn" data-f="DELIVERING" onclick="setNurseFilter('DELIVERING')">🚗 배송중</button>
+      <button class="nf-btn" data-f="PROCESSING" onclick="setNurseFilter('PROCESSING')">⚗️ 처리중</button>
+      <button class="nf-btn" data-f="DONE" onclick="setNurseFilter('DONE')">✅ 완료</button>
+    </div>
+  </div>
+  <div class="nurse-layout">
+    <div class="nurse-main"><div class="n-list" id="nList"></div></div>
+    <div class="nurse-side">
+      <div class="side-box"><div class="side-hd">📊 병동 현황</div><div class="side-bd" id="nsSummary"></div></div>
+      <div class="side-box"><div class="side-hd">🚨 긴급 TOP 3</div><div class="side-bd" id="nsUrgent"></div></div>
+      <div class="side-box"><div class="side-hd">🔔 미수령 알림</div><div class="side-bd" id="nsUncollected"></div></div>
+      <div class="comp"><div class="comp-hd" onclick="toggleNurseComp()"><span>✅ 오늘 완료 이력</span><span class="q-ct" id="nsHistCt">0건</span></div><div class="comp-bd collapsed" id="nsHistBd"></div></div>
+    </div>
+  </div>
+</div>
+<!-- 관리자 뷰 -->
+<div class="view" id="v3">
+  <div class="admin-emr"><button onclick="simulateEMR()">🔗 EMR 연동 시뮬레이션</button></div>
+  <div class="admin-grid">
+    <div class="admin-box"><div class="admin-hd">📊 처방유형별 현황</div><div class="admin-bd" id="donutChart"></div></div>
+    <div class="admin-box"><div class="admin-hd">🏥 병동별 평균 대기시간</div><div class="admin-bd" id="barChart"></div></div>
+    <div class="admin-box"><div class="admin-hd">🎯 우선순위 점수 분포</div><div class="admin-bd" id="scoreDist"></div></div>
+    <div class="admin-box"><div class="admin-hd">⚗️ 조제방식별 처리량</div><div class="admin-bd" id="prepStats"></div></div>
+    <div class="admin-box" style="grid-column:span 2"><div class="admin-hd">📈 시간대별 처방 건수</div><div class="admin-bd" id="lineChart"></div></div>
+    <div class="admin-box"><div class="admin-hd">⚠️ 경고 발생 이력</div><div class="admin-bd" id="alertHistory" style="max-height:160px;overflow-y:auto"></div></div>
+    <div class="admin-box"><div class="admin-hd">📝 감사 로그 (Audit Trail)</div><div class="admin-bd" id="auditLogList" style="max-height:160px;overflow-y:auto"></div></div>
+  </div>
+</div>
+
+<!-- Universal Modal -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()"><div class="modal" id="modalC"></div></div>
+
+<div class="toast" id="toast"></div>
+<script src="pharmData.js"></script>
+<script src="pharmAlgorithm.js"></script>
+<script src="pharmUI.js"></script>
+</body>
+</html>
